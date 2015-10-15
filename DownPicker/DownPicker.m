@@ -16,6 +16,7 @@
 @implementation DownPicker
 {
     NSString* _previousSelectedString;
+    BOOL _isCancelling;
 }
 
 -(id)initWithTextField:(UITextField *)tf
@@ -96,15 +97,7 @@
     // make the textField selectable again
     textField.userInteractionEnabled = YES;
     
-    [textField resignFirstResponder]; //hides the pickerView
-    if (self->textField.text.length == 0 || ![self->dataArray containsObject:self->textField.text]) {
-        self->textField.text = [dataArray objectAtIndex:0];
-        [self sendActionsForControlEvents:UIControlEventValueChanged];
-    } else {
-        if (![self->textField.text isEqualToString:_previousSelectedString]) {
-            [self sendActionsForControlEvents:UIControlEventValueChanged];
-        }
-    }
+    [textField resignFirstResponder]; //hides the pickerView and triggers textFieldDidEndEditing
 }
 
 -(void)cancelClicked:(id)sender
@@ -112,8 +105,10 @@
     // make the textField selectable again
     textField.userInteractionEnabled = YES;
     
+    _isCancelling = YES;
     [textField resignFirstResponder]; //hides the pickerView
     self->textField.text = _previousSelectedString;
+    _isCancelling = NO;
 }
 
 
@@ -184,6 +179,19 @@
 
 - (void)textFieldDidEndEditing:(UITextField *)aTextField {
     aTextField.userInteractionEnabled = YES;
+    
+    if (_isCancelling) {
+        return;
+    }
+    
+    if (self->textField.text.length == 0 || ![self->dataArray containsObject:self->textField.text]) {
+        self->textField.text = [dataArray objectAtIndex:0];
+        [self sendActionsForControlEvents:UIControlEventValueChanged];
+    } else {
+        if (![self->textField.text isEqualToString:_previousSelectedString]) {
+            [self sendActionsForControlEvents:UIControlEventValueChanged];
+        }
+    }
 }
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
